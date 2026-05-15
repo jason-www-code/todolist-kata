@@ -17,7 +17,7 @@ const { title } = require("process");
 const { v4: uuidv4 } = require("uuid");
 const { errorHandler } = require("./utils/error");
 
-const data = [{ title: 1, id: uuidv4() }];
+const data = ;
 
 const requestListener = (request, response) => {
   console.log(request.url, request.method);
