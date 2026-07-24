@@ -1,5 +1,4 @@
 const http = require("http");
-const { title } = require("process");
 const { v4: uuidv4 } = require("uuid");
 const { errorHandler } = require("./utils/error");
 
@@ -7,11 +6,9 @@ const data = [];
 
 const requestListener = (request, response) => {
   let body = "";
-  let count = 0;
 
   request.on("data", (chunk) => {
     body += chunk;
-    count++;
   });
 
   const header = {
