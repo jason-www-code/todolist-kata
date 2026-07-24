@@ -1,17 +1,3 @@
-// const { v4: uuidv4 } = require("uuid");
-
-// console.log("uuidv4 => ", uuidv4());
-
-// const a = uuidv4();
-// console.log("a => ", uuidv4());
-
-// const data = {
-//   title: "測試",
-//   id: uuidv4(),
-// };
-
-// console.log("data => ", data);
-
 const http = require("http");
 const { title } = require("process");
 const { v4: uuidv4 } = require("uuid");
@@ -20,26 +6,13 @@ const { errorHandler } = require("./utils/error");
 const data = [];
 
 const requestListener = (request, response) => {
-  console.log(request.url, request.method);
-
   let body = "";
   let count = 0;
 
   request.on("data", (chunk) => {
     body += chunk;
     count++;
-    console.log("chunk", chunk);
-    // console.log("執行次數 : ", count);
   });
-
-  // request.on("end", () => {
-  //   console.log("========================");
-  //   console.log(body);
-  //   console.log(typeof body);
-  //   console.log(typeof JSON.parse(body));
-  //   console.log(JSON.parse(body));
-  //   console.log(JSON.parse(body).title);
-  // });
 
   const header = {
     "Access-Control-Allow-Headers":
@@ -62,8 +35,6 @@ const requestListener = (request, response) => {
     request.on("end", () => {
       try {
         const { title } = JSON.parse(body);
-        console.log(title);
-        console.log(typeof body);
 
         if (title) {
           data.push({
@@ -101,7 +72,6 @@ const requestListener = (request, response) => {
   } else if (request.url.startsWith("/todos/") && request.method === "DELETE") {
     const id = request.url.split("/").pop();
     const index = data.findIndex((el) => el.id === id);
-    console.log(id, index);
     if (index !== -1) {
       data.splice(index, 1);
 
@@ -165,4 +135,4 @@ const requestListener = (request, response) => {
 };
 
 const server = http.createServer(requestListener);
-server.listen(process.env.PORT  || 8080);
+server.listen(process.env.PORT || 8080);
