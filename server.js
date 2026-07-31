@@ -1,6 +1,9 @@
 const http = require("http");
 const { v4: uuidv4 } = require("uuid");
 const { errorHandler } = require("./utils/error");
+const { successHandler } = require("./utils/success");
+
+const headers = require("./utils/headers");
 
 const data = [];
 
@@ -11,78 +14,38 @@ const requestListener = (request, response) => {
     body += chunk;
   });
 
-  const header = {
-    "Access-Control-Allow-Headers":
-      "Content-Type, Authorization, Content-Length, X-Requested-With",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "PATCH, POST, GET,OPTIONS,DELETE",
-    "Content-Type": "application/json",
-  };
-
   if (request.url === "/todos" && request.method === "GET") {
-    response.writeHead(200, header);
-    response.write(
-      JSON.stringify({
-        status: "success",
-        data,
-      }),
-    );
-    response.end();
+    successHandler(response, data);
   } else if (request.url === "/todos" && request.method === "POST") {
     request.on("end", () => {
       try {
         const { title } = JSON.parse(body);
 
-        if (title) {
+        if (title && title.trim() !== "") {
           data.push({
-            title,
+            title: title.trim(),
             id: uuidv4(),
           });
 
-          response.writeHead(200, header);
-          response.write(
-            JSON.stringify({
-              status: "success",
-              data,
-            }),
-          );
-          response.end();
+          successHandler(response, data);
         } else {
-          errorHandler(response);
+          errorHandler(response, 400, "title 不能為空");
         }
       } catch (error) {
-        errorHandler(response);
+        errorHandler(response, 400, "title 不能為空");
       }
     });
   } else if (request.url === "/todos" && request.method === "DELETE") {
     data.length = 0;
-
-    response.writeHead(200, header);
-    response.write(
-      JSON.stringify({
-        status: "success",
-        message: "刪除成功!",
-        data,
-      }),
-    );
-    response.end();
+    successHandler(response, data, "刪除成功!");
   } else if (request.url.startsWith("/todos/") && request.method === "DELETE") {
     const id = request.url.split("/").pop();
     const index = data.findIndex((el) => el.id === id);
     if (index !== -1) {
       data.splice(index, 1);
-
-      response.writeHead(200, header);
-      response.write(
-        JSON.stringify({
-          status: "success",
-          message: `刪除 ${id} 成功!`,
-          data,
-        }),
-      );
-      response.end();
+      successHandler(response, data, "刪除成功!");
     } else {
-      errorHandler(response);
+      errorHandler(response, 400, "無此 todo id");
     }
   } else if (request.url.startsWith("/todos/") && request.method === "PATCH") {
     request.on("end", () => {
@@ -92,42 +55,21 @@ const requestListener = (request, response) => {
         const id = request.url.split("/").pop();
         const index = data.findIndex((el) => el.id === id);
 
-        if (title && index !== -1) {
+        if (title && index !== -1 && title.trim() !== "") {
           data[index].title = title;
-          response.writeHead(200, header);
-          response.write(
-            JSON.stringify({
-              status: "success",
-              data,
-            }),
-          );
-
-          response.end();
+          successHandler(response, data);
         } else {
-          errorHandler(response);
+          errorHandler(response, 400, "欄位未填寫正確，或無此 todo id");
         }
       } catch (error) {
-        errorHandler(response);
+        errorHandler(response, 400, "JSON 格式錯誤");
       }
     });
   } else if (request.method === "OPTIONS") {
-    response.writeHead(200, header);
-    response.write(
-      JSON.stringify({
-        status: "true",
-        message: "成功 !",
-      }),
-    );
+    response.writeHead(200, headers);
     response.end();
   } else {
-    response.writeHead(404, header);
-    response.write(
-      JSON.stringify({
-        status: "false",
-        message: ["發生錯誤 ! "],
-      }),
-    );
-    response.end();
+    errorHandler(response, 404, "無此網站路由");
   }
 };
 
